@@ -566,21 +566,20 @@ document.addEventListener('DOMContentLoaded', () => {
 // ==========================================
 function initRadarChart() {
     const canvas = document.getElementById('radarChart');
-    if (!canvas) return;
+    const container = document.querySelector('.radar-container');
+    if (!canvas || !container) return;
     const ctx = canvas.getContext('2d');
     
-    // Set internal resolution for high DPI screens
     const size = 600;
     const dpr = window.devicePixelRatio || 1;
     canvas.width = size * dpr;
     canvas.height = size * dpr;
     
-    // Scale CSS visually
-    // Keep it responsive for smaller screens
     canvas.style.width = '100%';
     canvas.style.maxWidth = `${size}px`;
     canvas.style.height = 'auto';
     canvas.style.aspectRatio = '1 / 1';
+    canvas.style.transition = 'transform 0.1s ease-out';
     
     ctx.scale(dpr, dpr);
 
@@ -600,11 +599,27 @@ function initRadarChart() {
     const numSides = skills.length;
     const angleStep = (Math.PI * 2) / numSides;
     
-    // Animation progress
     let progress = 0;
     let isAnimating = false;
+    let startTime = null;
 
-    function drawRadar(currentProgress) {
+    // 3D Hover Physics
+    container.addEventListener('mousemove', (e) => {
+        const rect = container.getBoundingClientRect();
+        const x = e.clientX - rect.left - rect.width / 2;
+        const y = e.clientY - rect.top - rect.height / 2;
+        const rotateX = (y / rect.height) * -20; // Max tilt 20deg
+        const rotateY = (x / rect.width) * 20;
+        canvas.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(1.05)`;
+    });
+
+    container.addEventListener('mouseleave', () => {
+        canvas.style.transform = `perspective(1000px) rotateX(0deg) rotateY(0deg) scale(1)`;
+        canvas.style.transition = 'transform 0.5s ease-out';
+        setTimeout(() => canvas.style.transition = 'transform 0.1s ease-out', 500);
+    });
+
+    function drawRadar(currentProgress, time) {
         ctx.clearRect(0, 0, size, size);
 
         // 1. Draw concentric background grids
@@ -625,7 +640,21 @@ function initRadarChart() {
             ctx.stroke();
         }
 
-        // 2. Draw axes and labels
+        // 2. Sweeping Radar Beam (Continuous)
+        if (currentProgress > 0.5) {
+            const sweepAngle = (time / 1000) * (Math.PI * 2) * 0.5; // Rotate half a circle per sec
+            ctx.beginPath();
+            ctx.moveTo(centerX, centerY);
+            ctx.arc(centerX, centerY, radius, sweepAngle, sweepAngle + 0.5);
+            ctx.closePath();
+            const beamGrad = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, radius);
+            beamGrad.addColorStop(0, "rgba(236, 72, 153, 0.4)");
+            beamGrad.addColorStop(1, "rgba(236, 72, 153, 0)");
+            ctx.fillStyle = beamGrad;
+            ctx.fill();
+        }
+
+        // 3. Draw axes and labels
         for (let i = 0; i < numSides; i++) {
             const angle = i * angleStep - Math.PI / 2;
             const x = centerX + Math.cos(angle) * radius;
@@ -650,13 +679,11 @@ function initRadarChart() {
             ctx.fillText(skills[i].name, labelX, labelY);
         }
 
-        // 3. Draw the animated Data Polygon
+        // 4. Draw the animated Data Polygon
         ctx.beginPath();
         for (let i = 0; i < numSides; i++) {
             const angle = i * angleStep - Math.PI / 2;
-            // Eased progress mapping for stagger effect
             const easedProgress = Math.min(1, Math.max(0, currentProgress * 1.5 - i * 0.1));
-            // Apply bounce easing for the futuristic pop effect
             const p = 1 - Math.pow(1 - easedProgress, 3); 
             
             const valueRadius = (skills[i].value / 100) * radius * p;
@@ -668,11 +695,10 @@ function initRadarChart() {
         }
         ctx.closePath();
 
-        // Polygon Fill with Holographic Gradient
+        // Polygon Fill
         const gradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, radius);
         gradient.addColorStop(0, "rgba(99, 102, 241, 0.8)");
         gradient.addColorStop(1, "rgba(236, 72, 153, 0.4)");
-        
         ctx.fillStyle = gradient;
         ctx.fill();
 
@@ -682,7 +708,7 @@ function initRadarChart() {
         ctx.lineJoin = "round";
         ctx.stroke();
 
-        // Draw glowing nodes at the vertices
+        // 5. Draw continuously pulsing glowing nodes
         for (let i = 0; i < numSides; i++) {
             const angle = i * angleStep - Math.PI / 2;
             const easedProgress = Math.min(1, Math.max(0, currentProgress * 1.5 - i * 0.1));
@@ -692,13 +718,16 @@ function initRadarChart() {
             const y = centerY + Math.sin(angle) * valueRadius;
 
             if (p > 0) {
+                // Continuous pulse math
+                const pulse = Math.sin(time / 200 + i) * 2; 
+
                 ctx.beginPath();
                 ctx.arc(x, y, 6, 0, Math.PI * 2);
                 ctx.fillStyle = "#ffffff";
                 ctx.fill();
                 
                 ctx.beginPath();
-                ctx.arc(x, y, 10, 0, Math.PI * 2);
+                ctx.arc(x, y, 10 + pulse, 0, Math.PI * 2);
                 ctx.strokeStyle = "rgba(236, 72, 153, 0.8)";
                 ctx.lineWidth = 2;
                 ctx.stroke();
@@ -706,29 +735,29 @@ function initRadarChart() {
         }
     }
 
-    // Animation Loop
-    function animate() {
+    // Infinite Animation Loop
+    function animate(timestamp) {
+        if (!startTime) startTime = timestamp;
+        const elapsed = timestamp - startTime;
+        
         if (progress < 1) {
-            progress += 0.015; // Animation speed
-            drawRadar(progress);
-            requestAnimationFrame(animate);
-        } else {
-            // Ensure it snaps perfectly to 1 at the end
-            drawRadar(1);
+            progress += 0.015; // Initial reveal speed
         }
+        
+        drawRadar(Math.min(progress, 1), elapsed);
+        requestAnimationFrame(animate);
     }
 
-    // Intersection Observer to trigger animation
     const observer = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
             if (entry.isIntersecting && !isAnimating) {
                 isAnimating = true;
-                animate();
+                requestAnimationFrame(animate);
             }
         });
     }, { threshold: 0.3 });
 
-    observer.observe(document.querySelector('.radar-container'));
+    observer.observe(container);
 }
 
 // Call on load
