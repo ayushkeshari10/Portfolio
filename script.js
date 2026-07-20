@@ -588,12 +588,12 @@ function initRadarChart() {
     const radius = 180;
 
     const skills = [
-        { name: "Problem Solving", value: 95 },
-        { name: "Leadership", value: 85 },
-        { name: "Communication", value: 90 },
-        { name: "Adaptability", value: 88 },
-        { name: "Critical Thinking", value: 92 },
-        { name: "Time Management", value: 80 }
+        { name: "Problem Solving", value: 95, desc: "Tackling complex architectural challenges with optimal, scalable solutions." },
+        { name: "Leadership", value: 85, desc: "Guiding teams through agile sprints and mentoring junior developers." },
+        { name: "Communication", value: 90, desc: "Bridging the gap between technical and non-technical stakeholders." },
+        { name: "Adaptability", value: 88, desc: "Rapidly learning new frameworks and pivoting to new requirements." },
+        { name: "Critical Thinking", value: 92, desc: "Analyzing systems from first principles to find structural improvements." },
+        { name: "Time Management", value: 80, desc: "Delivering high-quality code consistently ahead of strict deadlines." }
     ];
 
     const numSides = skills.length;
@@ -602,21 +602,35 @@ function initRadarChart() {
     let progress = 0;
     let isAnimating = false;
     let startTime = null;
+    let mouseCanvasX = -1000;
+    let mouseCanvasY = -1000;
 
-    // 3D Hover Physics
+    const tooltip = document.getElementById('radarTooltip');
+    const tooltipTitle = document.getElementById('radarTooltipTitle');
+    const tooltipDesc = document.getElementById('radarTooltipDesc');
+
+    // 3D Hover Physics & Hit Detection
     container.addEventListener('mousemove', (e) => {
         const rect = container.getBoundingClientRect();
         const x = e.clientX - rect.left - rect.width / 2;
         const y = e.clientY - rect.top - rect.height / 2;
-        const rotateX = (y / rect.height) * -20; // Max tilt 20deg
+        const rotateX = (y / rect.height) * -20; 
         const rotateY = (x / rect.width) * 20;
         canvas.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(1.05)`;
+        
+        // precise canvas hit detection
+        const canvasRect = canvas.getBoundingClientRect();
+        mouseCanvasX = ((e.clientX - canvasRect.left) / canvasRect.width) * size;
+        mouseCanvasY = ((e.clientY - canvasRect.top) / canvasRect.height) * size;
     });
 
     container.addEventListener('mouseleave', () => {
         canvas.style.transform = `perspective(1000px) rotateX(0deg) rotateY(0deg) scale(1)`;
         canvas.style.transition = 'transform 0.5s ease-out';
         setTimeout(() => canvas.style.transition = 'transform 0.1s ease-out', 500);
+        mouseCanvasX = -1000;
+        mouseCanvasY = -1000;
+        if (tooltip) tooltip.classList.remove('active');
     });
 
     function drawRadar(currentProgress, time) {
@@ -708,7 +722,10 @@ function initRadarChart() {
         ctx.lineJoin = "round";
         ctx.stroke();
 
-        // 5. Draw continuously pulsing glowing nodes
+        // 5. Draw continuously pulsing glowing nodes and handle hit detection
+        let hoveredIndex = -1;
+        const hitRadius = 40; // generous hit area
+
         for (let i = 0; i < numSides; i++) {
             const angle = i * angleStep - Math.PI / 2;
             const easedProgress = Math.min(1, Math.max(0, currentProgress * 1.5 - i * 0.1));
@@ -718,8 +735,23 @@ function initRadarChart() {
             const y = centerY + Math.sin(angle) * valueRadius;
 
             if (p > 0) {
+                // Hit detection
+                const dist = Math.hypot(x - mouseCanvasX, y - mouseCanvasY);
+                if (dist < hitRadius) {
+                    hoveredIndex = i;
+                }
+
                 // Continuous pulse math
+                const isHovered = (hoveredIndex === i);
                 const pulse = Math.sin(time / 200 + i) * 2; 
+                const nodeRadius = isHovered ? 15 : 10 + pulse;
+
+                if (isHovered) {
+                    ctx.beginPath();
+                    ctx.arc(x, y, 20, 0, Math.PI * 2);
+                    ctx.fillStyle = "rgba(236, 72, 153, 0.3)";
+                    ctx.fill();
+                }
 
                 ctx.beginPath();
                 ctx.arc(x, y, 6, 0, Math.PI * 2);
@@ -727,11 +759,20 @@ function initRadarChart() {
                 ctx.fill();
                 
                 ctx.beginPath();
-                ctx.arc(x, y, 10 + pulse, 0, Math.PI * 2);
+                ctx.arc(x, y, nodeRadius, 0, Math.PI * 2);
                 ctx.strokeStyle = "rgba(236, 72, 153, 0.8)";
-                ctx.lineWidth = 2;
+                ctx.lineWidth = isHovered ? 4 : 2;
                 ctx.stroke();
             }
+        }
+
+        // Update HTML Tooltip
+        if (hoveredIndex !== -1 && tooltip) {
+            tooltipTitle.textContent = skills[hoveredIndex].name;
+            tooltipDesc.textContent = skills[hoveredIndex].desc;
+            tooltip.classList.add('active');
+        } else if (tooltip) {
+            tooltip.classList.remove('active');
         }
     }
 
