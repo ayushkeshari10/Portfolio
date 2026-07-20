@@ -589,8 +589,8 @@ function initRadarChart() {
 
     const skills = [
         { name: "Problem Solving", value: 95, desc: "Breaking down complex coding problems into clear, logical steps to build efficient solutions." },
-        { name: "Leadership", value: 85, desc: "Taking initiative in group projects and organizing team efforts to successfully reach our goals." },
-        { name: "Communication", value: 90, desc: "Explaining technical concepts clearly and collaborating actively with peers on shared projects." },
+        { name: "Leadership", value: 85, desc: "Taking initiative as Placement Coordinator and Regent Secretary @ CrewAI to organize team efforts." },
+        { name: "Communication", value: 90, desc: "Explaining technical concepts clearly and collaborating actively with peers and faculty on shared projects." },
         { name: "Adaptability", value: 88, desc: "Quickly learning new technologies, frameworks, and embracing changing project requirements." },
         { name: "Critical Thinking", value: 92, desc: "Analyzing challenges from multiple angles to find the most effective and creative approach." },
         { name: "Time Management", value: 80, desc: "Balancing multiple coding projects effectively to consistently meet deadlines." }
