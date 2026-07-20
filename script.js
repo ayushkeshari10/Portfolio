@@ -588,12 +588,12 @@ function initRadarChart() {
     const radius = 180;
 
     const skills = [
-        { name: "Problem Solving", value: 95, desc: "Tackling complex architectural challenges with optimal, scalable solutions." },
-        { name: "Leadership", value: 85, desc: "Guiding teams through agile sprints and mentoring junior developers." },
-        { name: "Communication", value: 90, desc: "Bridging the gap between technical and non-technical stakeholders." },
-        { name: "Adaptability", value: 88, desc: "Rapidly learning new frameworks and pivoting to new requirements." },
-        { name: "Critical Thinking", value: 92, desc: "Analyzing systems from first principles to find structural improvements." },
-        { name: "Time Management", value: 80, desc: "Delivering high-quality code consistently ahead of strict deadlines." }
+        { name: "Problem Solving", value: 95, desc: "Breaking down complex coding problems into clear, logical steps to build efficient solutions." },
+        { name: "Leadership", value: 85, desc: "Taking initiative in group projects and organizing team efforts to successfully reach our goals." },
+        { name: "Communication", value: 90, desc: "Explaining technical concepts clearly and collaborating actively with peers on shared projects." },
+        { name: "Adaptability", value: 88, desc: "Quickly learning new technologies, frameworks, and embracing changing project requirements." },
+        { name: "Critical Thinking", value: 92, desc: "Analyzing challenges from multiple angles to find the most effective and creative approach." },
+        { name: "Time Management", value: 80, desc: "Balancing multiple coding projects effectively to consistently meet deadlines." }
     ];
 
     const numSides = skills.length;
