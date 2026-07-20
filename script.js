@@ -560,3 +560,178 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 });
+
+// ==========================================
+// Holographic Radar Chart for Personal Skills
+// ==========================================
+function initRadarChart() {
+    const canvas = document.getElementById('radarChart');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    
+    // Set internal resolution for high DPI screens
+    const size = 600;
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = size * dpr;
+    canvas.height = size * dpr;
+    
+    // Scale CSS visually
+    // Keep it responsive for smaller screens
+    canvas.style.width = '100%';
+    canvas.style.maxWidth = `${size}px`;
+    canvas.style.height = 'auto';
+    canvas.style.aspectRatio = '1 / 1';
+    
+    ctx.scale(dpr, dpr);
+
+    const centerX = size / 2;
+    const centerY = size / 2;
+    const radius = 180;
+
+    const skills = [
+        { name: "Problem Solving", value: 95 },
+        { name: "Leadership", value: 85 },
+        { name: "Communication", value: 90 },
+        { name: "Adaptability", value: 88 },
+        { name: "Critical Thinking", value: 92 },
+        { name: "Time Management", value: 80 }
+    ];
+
+    const numSides = skills.length;
+    const angleStep = (Math.PI * 2) / numSides;
+    
+    // Animation progress
+    let progress = 0;
+    let isAnimating = false;
+
+    function drawRadar(currentProgress) {
+        ctx.clearRect(0, 0, size, size);
+
+        // 1. Draw concentric background grids
+        const levels = 5;
+        for (let i = 1; i <= levels; i++) {
+            const r = (radius / levels) * i;
+            ctx.beginPath();
+            for (let j = 0; j < numSides; j++) {
+                const angle = j * angleStep - Math.PI / 2;
+                const x = centerX + Math.cos(angle) * r;
+                const y = centerY + Math.sin(angle) * r;
+                if (j === 0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+            }
+            ctx.closePath();
+            ctx.strokeStyle = `rgba(99, 102, 241, ${0.1 + (i * 0.05)})`;
+            ctx.lineWidth = 1;
+            ctx.stroke();
+        }
+
+        // 2. Draw axes and labels
+        for (let i = 0; i < numSides; i++) {
+            const angle = i * angleStep - Math.PI / 2;
+            const x = centerX + Math.cos(angle) * radius;
+            const y = centerY + Math.sin(angle) * radius;
+            
+            // Axis line
+            ctx.beginPath();
+            ctx.moveTo(centerX, centerY);
+            ctx.lineTo(x, y);
+            ctx.strokeStyle = "rgba(99, 102, 241, 0.2)";
+            ctx.lineWidth = 1.5;
+            ctx.stroke();
+
+            // Label
+            const labelX = centerX + Math.cos(angle) * (radius + 40);
+            const labelY = centerY + Math.sin(angle) * (radius + 40);
+            
+            ctx.fillStyle = "rgba(255, 255, 255, 0.9)";
+            ctx.font = "600 15px 'Inter', sans-serif";
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            ctx.fillText(skills[i].name, labelX, labelY);
+        }
+
+        // 3. Draw the animated Data Polygon
+        ctx.beginPath();
+        for (let i = 0; i < numSides; i++) {
+            const angle = i * angleStep - Math.PI / 2;
+            // Eased progress mapping for stagger effect
+            const easedProgress = Math.min(1, Math.max(0, currentProgress * 1.5 - i * 0.1));
+            // Apply bounce easing for the futuristic pop effect
+            const p = 1 - Math.pow(1 - easedProgress, 3); 
+            
+            const valueRadius = (skills[i].value / 100) * radius * p;
+            const x = centerX + Math.cos(angle) * valueRadius;
+            const y = centerY + Math.sin(angle) * valueRadius;
+            
+            if (i === 0) ctx.moveTo(x, y);
+            else ctx.lineTo(x, y);
+        }
+        ctx.closePath();
+
+        // Polygon Fill with Holographic Gradient
+        const gradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, radius);
+        gradient.addColorStop(0, "rgba(99, 102, 241, 0.8)");
+        gradient.addColorStop(1, "rgba(236, 72, 153, 0.4)");
+        
+        ctx.fillStyle = gradient;
+        ctx.fill();
+
+        // Polygon Stroke
+        ctx.strokeStyle = "#ec4899";
+        ctx.lineWidth = 3;
+        ctx.lineJoin = "round";
+        ctx.stroke();
+
+        // Draw glowing nodes at the vertices
+        for (let i = 0; i < numSides; i++) {
+            const angle = i * angleStep - Math.PI / 2;
+            const easedProgress = Math.min(1, Math.max(0, currentProgress * 1.5 - i * 0.1));
+            const p = 1 - Math.pow(1 - easedProgress, 3); 
+            const valueRadius = (skills[i].value / 100) * radius * p;
+            const x = centerX + Math.cos(angle) * valueRadius;
+            const y = centerY + Math.sin(angle) * valueRadius;
+
+            if (p > 0) {
+                ctx.beginPath();
+                ctx.arc(x, y, 6, 0, Math.PI * 2);
+                ctx.fillStyle = "#ffffff";
+                ctx.fill();
+                
+                ctx.beginPath();
+                ctx.arc(x, y, 10, 0, Math.PI * 2);
+                ctx.strokeStyle = "rgba(236, 72, 153, 0.8)";
+                ctx.lineWidth = 2;
+                ctx.stroke();
+            }
+        }
+    }
+
+    // Animation Loop
+    function animate() {
+        if (progress < 1) {
+            progress += 0.015; // Animation speed
+            drawRadar(progress);
+            requestAnimationFrame(animate);
+        } else {
+            // Ensure it snaps perfectly to 1 at the end
+            drawRadar(1);
+        }
+    }
+
+    // Intersection Observer to trigger animation
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting && !isAnimating) {
+                isAnimating = true;
+                animate();
+            }
+        });
+    }, { threshold: 0.3 });
+
+    observer.observe(document.querySelector('.radar-container'));
+}
+
+// Call on load
+document.addEventListener('DOMContentLoaded', () => {
+    initRadarChart();
+});

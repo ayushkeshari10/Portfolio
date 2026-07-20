@@ -767,82 +767,37 @@ body.loaded .hero-image-container {
 }
 
 /* =========================================
-   Personal Skills Marquee Section
+   Holographic Radar Section
 ========================================= */
 .personal-skills {
-    overflow-x: hidden;
     padding-bottom: 5rem;
-}
-
-.marquee-container {
-    width: 100vw;
-    position: relative;
-    left: 50%;
-    transform: translateX(-50%);
     overflow: hidden;
-    padding: 1.5rem 0;
+}
+
+.radar-container {
+    width: 100%;
     display: flex;
-}
-
-.marquee-track {
-    display: flex;
-    gap: 2rem;
-    width: max-content;
-}
-
-.marquee-track:hover {
-    animation-play-state: paused;
-}
-
-.track-left {
-    animation: scroll-left 25s linear infinite;
-}
-
-.track-right {
-    animation: scroll-right 30s linear infinite;
-}
-
-.marquee-item {
-    display: flex;
+    justify-content: center;
     align-items: center;
-    gap: 1rem;
-    padding: 1.2rem 2.5rem;
-    border-radius: 50px;
-    font-size: 1.15rem;
-    font-weight: 600;
-    letter-spacing: 1px;
-    white-space: nowrap;
-    color: var(--text-primary);
-    cursor: default;
-    transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.4s ease, border-color 0.4s ease;
-    border: 1px solid var(--surface-border);
+    padding: 2rem 0;
+    position: relative;
 }
 
-.marquee-item i {
-    color: var(--primary-color);
-    font-size: 1.4rem;
-    transition: filter 0.4s ease, transform 0.4s ease;
+/* Glowing aura behind the radar */
+.radar-container::before {
+    content: '';
+    position: absolute;
+    width: 400px;
+    height: 400px;
+    background: radial-gradient(circle, rgba(99, 102, 241, 0.15) 0%, rgba(99, 102, 241, 0) 70%);
+    border-radius: 50%;
+    z-index: 0;
+    pointer-events: none;
 }
 
-.marquee-item:hover {
-    transform: translateY(-8px) scale(1.05);
-    border-color: var(--primary-color);
-    box-shadow: 0 15px 35px rgba(99, 102, 241, 0.2);
-}
-
-.marquee-item:hover i {
-    filter: drop-shadow(0 0 12px var(--primary-color));
-    transform: scale(1.2);
-}
-
-@keyframes scroll-left {
-    0% { transform: translateX(0); }
-    100% { transform: translateX(calc(-50% - 1rem)); } 
-}
-
-@keyframes scroll-right {
-    0% { transform: translateX(calc(-50% - 1rem)); }
-    100% { transform: translateX(0); }
+#radarChart {
+    z-index: 1;
+    max-width: 100%;
 }
 
 /* =========================================
